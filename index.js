@@ -20,9 +20,8 @@ const _CONTEXT_SESSION = Symbol('context#_contextSession');
  * @param {Application} app, koa application instance
  * @api public
  */
-
 module.exports = function(opts, app) {
-  // session(app[, opts])
+  // session(app[, opts]) 如果传值顺序反了，进行调整
   if (opts && typeof opts.use === 'function') {
     [ app, opts ] = [ opts, app ];
   }
@@ -31,13 +30,16 @@ module.exports = function(opts, app) {
     throw new TypeError('app instance required: `session(opts, app)`');
   }
 
+  // 默认参数处理
   opts = formatOpts(opts);
   extendContext(app.context, opts);
 
   return async function session(ctx, next) {
+    // 新建了一个 ContextSession 对象 sess
     const sess = ctx[CONTEXT_SESSION];
     if (sess.store) await sess.initFromExternal();
     try {
+      // 执行我们的业务逻辑
       await next();
     } catch (err) {
       throw err;
@@ -50,13 +52,12 @@ module.exports = function(opts, app) {
 };
 
 /**
- * format and check session options
+ * format and check session options 处理选项
  * @param  {Object} opts session options
  * @return {Object} new session options
  *
  * @api private
  */
-
 function formatOpts(opts) {
   opts = opts || {};
   // key
@@ -65,7 +66,7 @@ function formatOpts(opts) {
   // back-compat maxage
   if (!('maxAge' in opts)) opts.maxAge = opts.maxage;
 
-  // defaults
+  // defaults 默认属性
   if (opts.overwrite == null) opts.overwrite = true;
   if (opts.httpOnly == null) opts.httpOnly = true;
   if (opts.signed == null) opts.signed = true;
@@ -111,14 +112,13 @@ function formatOpts(opts) {
 }
 
 /**
- * extend context prototype, add session properties
+ * extend context prototype, add session properties 为context添加session属性
  *
  * @param  {Object} context koa's context prototype
  * @param  {Object} opts session options
  *
  * @api private
  */
-
 function extendContext(context, opts) {
   if (context.hasOwnProperty(CONTEXT_SESSION)) {
     return;
